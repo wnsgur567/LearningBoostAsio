@@ -33,7 +33,13 @@ namespace olc
 				return os;
 			}
 
+			// Convenience Operator overloads - These allow us to add and remove stuff from
+			// the body vector as if it were a stack, so First in, Last Out. These are a 
+			// template in itself, because we dont know what data type the user is pushing or 
+			// popping, so lets allow them all. NOTE: It assumes the data type is fundamentally
+			// Plain Old Data (POD). TLDR: Serialise & Deserialise into/from a vector
 			// POD - plain old data (생성 소멸 및 가상 멤버함수가 없는 클래스)
+			
 			// pushes any POD-like data into the message buffer
 			template<typename DataType>
 			friend message<T>& operator << (message<T>& msg, const DataType& data)
@@ -54,6 +60,7 @@ namespace olc
 				return msg;
 			}
 
+			// Pulls any POD-like data form the message buffer
 			template<typename DataType>
 			friend message<T>& operator >> (message<T>& msg, DataType& data)
 			{
@@ -74,8 +81,15 @@ namespace olc
 			}
 		};
 
+
+		// owned_message 도 일반 message와 동일한데, 헌재 connection 과 연관되어있을 뿐(소유자 표시)
+		// server 시스템에서 message의 주인은 message를 보낸 client 이고
+		// client 시스템에서 message의 주인은 server이다
+
+		// Forward declare the connection
 		template <typename T>
 		class connection;
+
 
 		template <typename T>
 		struct owned_message

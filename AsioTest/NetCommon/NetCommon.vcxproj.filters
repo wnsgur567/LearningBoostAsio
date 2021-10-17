@@ -39,6 +39,9 @@
     <ClInclude Include="net_client.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
+    <ClInclude Include="net_server.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NetCommon.cpp">
