@@ -25,19 +25,25 @@ namespace olc
 			{
 				try
 				{
-					// Create Connection
-					m_connection = std::make_unique<connection<T>>();
 
 					// Resolve hostname/ip-address into tangiable physical address
 					boost::asio::ip::tcp::resolver resolver(m_context);
-					auto m_endpoints = resolver.resolve(host, std::to_string(port));
+					auto endpoints = resolver.resolve(host, std::to_string(port));
+
+					// Create Connection
+					m_connection = std::make_unique<connection<T>>(
+						connection<T>::owner::client,
+						m_context,
+						boost::asio::ip::tcp::socket(m_context),
+						m_qMessagesIn);
 
 					m_connection->ConnectToServer(endpoints);
+
 					thrContext = std::thread(
 						[this]() {m_context.run(); }
 					);
 				}
-				catch (const std::exception&)
+				catch (const std::exception& e)
 				{
 					std::cerr << "Client Exception: " << e.what() << "\n";
 					return false;
@@ -56,7 +62,7 @@ namespace olc
 				// Either way, we're also done with the asio context...
 				m_context.stop();
 				if (thrContext.joinable())
-
+					thrContext.join();
 			}
 			// Check if client is actually connected to a server
 			bool IsConnected()
@@ -66,6 +72,12 @@ namespace olc
 				else
 					return false;
 			}
+		public:
+			void Send(const message<T>& msg)
+			{
+				if (IsConnected())
+					m_connection->Send(msg);
+			}
 			// Retrieve queue of messges from server
 			tsqueue<owned_message<T>>& Incoming()
 			{
@@ -74,7 +86,6 @@ namespace olc
 		protected:
 			boost::asio::io_context m_context;
 			std::thread thrContext;
-			boost::asio::ip::tcp::socket m_socket;
 			std::unique_ptr<connection<T>> m_connection;
 		private:
 			tsqueue<owned_message<T>> m_qMessagesIn;

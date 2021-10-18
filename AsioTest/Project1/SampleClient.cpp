@@ -3,41 +3,55 @@
 
 enum class CustomMsgTypes : uint32_t
 {
-	FireBullet,
-	MovePlayer
+	ServerAccept,
+	ServerDeny,
+	ServerPing,
+	MessageAll,
+	ServerMessage,
+};
+
+class CustomClient : public olc::net::client_interface<CustomMsgTypes>
+{
+public:
+	void PingServer()
+	{
+		olc::net::message<CustomMsgTypes> msg;
+		msg.header.id = CustomMsgTypes::ServerPing;
+
+		std::chrono::system_clock::time_point timeNow = std::chrono::system_clock::now();
+
+		msg << timeNow;
+		Send(msg);
+	}
+
+	void MessageAll()
+	{
+		olc::net::message<CustomMsgTypes> msg;
+		msg.header.id = CustomMsgTypes::MessageAll;
+		Send(msg);
+	}
 };
 
 int main()
 {
-	olc::net::message<CustomMsgTypes> msg;
-	msg.header.id = CustomMsgTypes::FireBullet;
+	CustomClient c;
+	c.Connect("127.0.0.1", 60000);
 
-	int a = 1;
-	bool b = true;
-	float c = 3.141592f;
+	bool key[3] = { false,false,false };
+	bool old_key[3] = { false,false,false };
 
-	struct
+	bool bQuit = false;
+	while (!bQuit)
 	{
-		float x;
-		float y;
-	}d[5];
+		if (c.IsConnected())
+		{
+			if (!c.Incoming().empty())
+			{
 
-	msg << a;
-	msg << b;
-	msg << c;
-	msg << d;
+			}
+		}
 
-	//msg << a << b << c << d;
-
-	a = 99;
-	b = false;
-	c = 99.f;
-
-	msg >> d;
-	msg >> c;
-	msg >> b;
-	msg >> a;
-	//msg >> d >> c >> b >> a;
+	}
 
 	return 0;
 }

@@ -39,7 +39,7 @@ namespace olc
 			// popping, so lets allow them all. NOTE: It assumes the data type is fundamentally
 			// Plain Old Data (POD). TLDR: Serialise & Deserialise into/from a vector
 			// POD - plain old data (생성 소멸 및 가상 멤버함수가 없는 클래스)
-			
+
 			// pushes any POD-like data into the message buffer
 			template<typename DataType>
 			friend message<T>& operator << (message<T>& msg, const DataType& data)
@@ -54,7 +54,7 @@ namespace olc
 				// Physically copy the data into the newly allocated vector space
 				std::memcpy(msg.body.data() + i, &data, sizeof(DataType));
 				// Recalculate the message size
-				msg.header.size = msg.size();
+				msg.header.size = static_cast<uint32_t>(msg.size());
 
 				// Return the targe message so it can be "chained"
 				return msg;
@@ -94,7 +94,7 @@ namespace olc
 		template <typename T>
 		struct owned_message
 		{
-			std::shared_future<connection<T>> remote = nullptr;
+			std::shared_ptr<connection<T>> remote = nullptr;
 			message<T> msg;
 
 			friend std::ostream& operator << (std::ostream& os, const owned_message<T>& msg)

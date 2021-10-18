@@ -50,6 +50,7 @@ namespace olc
 				std::scoped_lock lock(muxQueue);
 				deqQueue.push_back(item);
 			}
+			
 			// Adds an item to front of Queue
 			void push_front(const T& item)
 			{
@@ -69,10 +70,25 @@ namespace olc
 				deqQueue.clear();
 			}
 
-
+			void clear()
+			{
+				std::scoped_lock lock(muxQueue);
+				deqQueue.clear();
+			}
+			void wait()
+			{
+				while (empty())
+				{
+					std::scoped_lock<std::mutex> ul(muxBlocking);
+					//cvBlocking.wait(ul);
+				}
+			}
 		protected:
 			std::mutex muxQueue;
 			std::deque<T> deqQueue;
+
+			std::condition_variable cvBlocking;
+			std::mutex muxBlocking;
 		};
 	}
 }

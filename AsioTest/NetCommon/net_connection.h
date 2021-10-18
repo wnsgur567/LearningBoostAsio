@@ -9,7 +9,7 @@ namespace olc
 	namespace net
 	{
 		template<typename T>
-		class connection : public std::enable_shared_from_this<T>
+		class connection : public std::enable_shared_from_this<connection<T>>
 		{
 		public:
 			enum class owner
@@ -17,6 +17,7 @@ namespace olc
 				server,
 				client
 			};
+
 			connection(owner parent, boost::asio::io_context& asioContext, boost::asio::ip::tcp::socket socket, tsqueue<owned_message<T>>& qIn)
 				:m_asioContext(asioContext), m_socket(std::move(socket)), m_qMessagesIn(qIn)
 			{
@@ -44,7 +45,24 @@ namespace olc
 					}
 				}
 			}
-			bool ConnectToServer();
+			void ConnectToServer(const boost::asio::ip::tcp::resolver::results_type& endpoints)
+			{
+				// Only clients can connect to servers
+				if (m_nOwnerType == owner::client)
+				{
+
+
+					// Request asio attempts to connect to an endpoint
+					boost::asio::async_connect(m_socket, endpoints,
+						[this](std::error_code ec, boost::asio::ip::tcp::endpoint endpoint)
+						{
+							if (!ec)
+							{
+								ReadHeader();
+							}
+						});
+				}
+			}
 			bool Disconnect()
 			{
 				if (IsConnected())
@@ -61,7 +79,7 @@ namespace olc
 		public:
 			// Async - Send a message, connections are one-to-one
 			// so no need to specify the target, for a client, the target is the server and vice versa
-			bool Send(const message<T>& msg)
+			void Send(const message<T>& msg)
 			{
 				boost::asio::post(m_asioContext,
 					[this, msg]()
@@ -91,7 +109,7 @@ namespace olc
 							if (m_msgTemporaryIn.header.size > 0)
 							{
 								m_msgTemporaryIn.body.resize(m_msgTemporaryIn.header.size);
-								Readbody();
+								ReadBody();
 							}
 							else
 							{
@@ -112,7 +130,8 @@ namespace olc
 			// Async - Prime context ready to read a message body
 			void ReadBody()
 			{
-				boost::asio::async_read(m_socket, boost::asio::buffer(m_msgTemporaryIn.header(), m_msgTemporaryIn.body.size),
+
+				boost::asio::async_read(m_socket, boost::asio::buffer(m_msgTemporaryIn.body.data(), m_msgTemporaryIn.body.size()),
 					[this](std::error_code ec, std::size_t length)
 					{
 						if (!ec)
@@ -182,7 +201,7 @@ namespace olc
 
 							// If the queue still has messages in it,
 							// then issue the task to send the next messages' header
-							if (!m_qMessagesOut)
+							if (!m_qMessagesOut.empty())
 							{
 								WriteHeader();
 							}
@@ -194,7 +213,6 @@ namespace olc
 						}
 					});
 			}
-
 			// Async - Prime context to write a message header
 			void AddToIncomingMessageQueue()
 			{
@@ -202,6 +220,9 @@ namespace olc
 					m_qMessagesIn.push_back({ this->shared_from_this(), m_msgTemporaryIn });
 				else
 					m_qMessagesIn.push_back({ nullptr, m_msgTemporaryIn });
+
+
+				ReadHeader();
 			}
 		protected:
 			// Each connection has a unique socket to a remote
@@ -217,7 +238,7 @@ namespace olc
 
 			// This queue holds all messages that have been recieved from the remote side of this connection
 			// Note it is a reference as the "owner" of this connection is expected to provide a queue
-			tsqueue<owned_message>& m_qMessagesIn;
+			tsqueue<owned_message<T>>& m_qMessagesIn;
 
 			// Incoming messages are constructed asynchronusly,
 			// so we will store the part assembled message here, until it is ready
