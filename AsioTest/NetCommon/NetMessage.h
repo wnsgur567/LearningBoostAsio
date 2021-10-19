@@ -74,7 +74,7 @@ namespace olc
 				// Shrink the vector to remove read bytes, and reset end position
 				msg.body.resize(i);
 				// Recaculate the message size
-				msg.header.size = msg.size();
+				msg.header.size = static_cast<uint32_t>(msg.size());
 
 				// Return the targe message so it can be "chained"
 				return msg;

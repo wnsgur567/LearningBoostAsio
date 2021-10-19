@@ -63,7 +63,7 @@ namespace olc
 						});
 				}
 			}
-			bool Disconnect()
+			void Disconnect()
 			{
 				if (IsConnected())
 					boost::asio::post(m_asioContext,

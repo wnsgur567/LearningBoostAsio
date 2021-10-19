@@ -163,7 +163,7 @@ namespace olc
 				{
 					auto msg = m_qMessagesIn.pop_front();
 
-					// Pss to message handler
+					// Psss to message handler
 					OnMessage(msg.remote, msg.msg);
 
 					nMessageCount++;
@@ -183,7 +183,7 @@ namespace olc
 				
 			}
 
-			// Called whnen a message arrives
+			// Called when a message arrives
 			virtual void OnMessage(std::shared_ptr<connection<T>> client, message<T>& msg)
 			{
 
