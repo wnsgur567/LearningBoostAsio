@@ -1,5 +1,5 @@
-#include<iostream>
 #include<olc_net.h>
+#include<iostream>
 
 enum class CustomMsgTypes : uint32_t
 {
@@ -8,6 +8,7 @@ enum class CustomMsgTypes : uint32_t
 	ServerPing,
 	MessageAll,
 	ServerMessage,
+	TestInt
 };
 
 class CustomClient : public olc::net::client_interface<CustomMsgTypes>
@@ -15,6 +16,8 @@ class CustomClient : public olc::net::client_interface<CustomMsgTypes>
 public:
 	void PingServer()
 	{
+		std::cout << "Ping Request\n";
+
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::ServerPing;
 
@@ -28,6 +31,19 @@ public:
 	{
 		olc::net::message<CustomMsgTypes> msg;
 		msg.header.id = CustomMsgTypes::MessageAll;
+		Send(msg);
+	}
+
+	void TestInt()
+	{
+		std::cout << "Test Int\n";
+
+		olc::net::message<CustomMsgTypes> msg;
+		msg.header.id = CustomMsgTypes::TestInt;
+
+		int n = rand() % 15;
+
+		msg << n;
 		Send(msg);
 	}
 };
@@ -50,8 +66,10 @@ int main()
 			key[2] = GetAsyncKeyState('3') & 0x8000;
 		}
 
-		if (key[0] && !old_key[0]) c.PingServer();
-		if (key[1] && !old_key[1]) c.MessageAll();
+		if (key[0] && !old_key[0])
+			c.TestInt();
+		if (key[1] && !old_key[1])
+			c.MessageAll();
 		if (key[2] && !old_key[2]) bQuit = true;
 
 		for (int i = 0; i < 3; i++) old_key[i] = key[i];
@@ -69,7 +87,7 @@ int main()
 				{
 					std::cout << "Server Accepted Connection\n";
 				}
-					break;
+				break;
 				case CustomMsgTypes::ServerPing:
 				{
 					// Server has responded to a ping request
@@ -86,7 +104,15 @@ int main()
 					std::cout << "Hello from [" << clientID << "]\n";
 				}
 				break;
-				}				
+
+				case CustomMsgTypes::TestInt:
+				{
+					int n;
+					msg >> n;
+					std::cout << "num : " << n << "\n";
+				}
+				break;
+				}
 			}
 		}
 		else

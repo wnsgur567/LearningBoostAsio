@@ -8,6 +8,7 @@ enum class CustomMsgTypes : uint32_t
 	ServerPing,
 	MessageAll,
 	ServerMessage,
+	TestInt
 };
 
 
@@ -49,6 +50,13 @@ protected:
 			msg.header.id = CustomMsgTypes::ServerMessage;
 			msg << client->GetID();
 			MessageAllClients(msg, client);
+		}
+		break;
+		case CustomMsgTypes::TestInt:
+		{
+			std::cout << "[" << client->GetID() << "]: Server Ping\n";
+
+			client->Send(msg);
 		}
 		break;
 		}

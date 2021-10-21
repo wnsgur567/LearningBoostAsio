@@ -24,7 +24,7 @@ namespace olc
 			// return size of entire message packet in bytes
 			size_t size() const
 			{
-				return sizeof(message_header<T>) + body.size();
+				return body.size();
 			}
 
 			friend std::ostream& operator << (std::ostream& os, const message<T>& msg)
@@ -49,14 +49,17 @@ namespace olc
 
 				// Cache current size of vector, as this will be the point we insert the data
 				size_t i = msg.body.size();
-				// Resize the vector by the size
+
+				// Resize the vector by the size of the data being pushed
 				msg.body.resize(msg.body.size() + sizeof(DataType));
+
 				// Physically copy the data into the newly allocated vector space
 				std::memcpy(msg.body.data() + i, &data, sizeof(DataType));
+
 				// Recalculate the message size
 				msg.header.size = static_cast<uint32_t>(msg.size());
 
-				// Return the targe message so it can be "chained"
+				// Return the target message so it can be "chained"
 				return msg;
 			}
 
@@ -69,14 +72,17 @@ namespace olc
 
 				// Cache the location towards the end of the vector where the pulled data starts
 				size_t i = msg.body.size() - sizeof(DataType);
+
 				// Physically copy the data from the vector into the user variable
 				std::memcpy(&data, msg.body.data() + i, sizeof(DataType));
+
 				// Shrink the vector to remove read bytes, and reset end position
 				msg.body.resize(i);
-				// Recaculate the message size
+
+				// Recalculate the message size
 				msg.header.size = static_cast<uint32_t>(msg.size());
 
-				// Return the targe message so it can be "chained"
+				// Return the target message so it can be "chained"
 				return msg;
 			}
 		};

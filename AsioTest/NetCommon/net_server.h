@@ -70,7 +70,7 @@ namespace olc
 							// Create a new connection to handle this client 
 							std::shared_ptr<connection<T>> newconn =
 								std::make_shared<connection<T>>(connection<T>::owner::server,
-									m_asioContext, std::move(socket), m_qMessagesIn);							
+									m_asioContext, std::move(socket), m_qMessagesIn);
 
 
 							// Give the user server a chance to deny connection
@@ -81,7 +81,7 @@ namespace olc
 
 								// And very important! Issue a task to the connection's
 								// asio context to sit and wait for bytes to arrive!
-								m_deqConnections.back()->ConnectToClient(nIDCounter++);
+								m_deqConnections.back()->ConnectToClient(this, nIDCounter++);
 
 								std::cout << "[" << m_deqConnections.back()->GetID() << "] Connection Approved\n";
 							}
@@ -180,11 +180,17 @@ namespace olc
 			// Called when a client appears to have disconnectd
 			virtual void OnClientDisconnect(std::shared_ptr<connection<T>> client)
 			{
-				
+
 			}
 
 			// Called when a message arrives
 			virtual void OnMessage(std::shared_ptr<connection<T>> client, message<T>& msg)
+			{
+
+			}
+		public:
+			// Called when a client is validated
+			virtual void OnClientValidated(std::shared_ptr<connection<T>> client)
 			{
 
 			}
